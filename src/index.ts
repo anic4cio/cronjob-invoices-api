@@ -1,34 +1,24 @@
-import { LogLevel, WebClient } from '@slack/web-api'
+import { sendFileToSlack } from './services/slackSender'
+import { getAllAppointments } from './services/appointmentsGetter'
 
-const slackToken = process.env.SLACK_TOKEN
-const channelId = process.env.SLACK_CHANNEL_ID
-if (!channelId) throw new Error('channelId not found')
-
-const client = new WebClient(slackToken, { logLevel: LogLevel.INFO })
+exports.start = async () => {
+  await sendAppointmentsToSlack()
+}
 
 const today = () => {
   const date = new Date().toLocaleString('en-US', {
     timeZone: 'America/Sao_Paulo'
   })
-  return new Date(date).toISOString()
+  return new Date(date).toLocaleDateString().replaceAll('/', '-')
 }
 
-exports.executeJob = async () => {
-  const messageToSlack =
-		`Hello from most AUTOMATED function around the world!! 💖\n${today()}`
-  return await sendMessageToSlack(messageToSlack)
+const getAppointmentsDataBuffer = async () => {
+  const acuityAppointments = await getAllAppointments()
+  return Buffer.from(JSON.stringify(acuityAppointments))
 }
 
-const sendMessageToSlack = async (message: string) => {
-  try {
-    return await client.chat.postMessage({
-      channel: channelId,
-      text: message
-    })
-  } catch (error) {
-    console.error('Failed to send report message to Slack')
-    throw error
-  }
+const sendAppointmentsToSlack = async () => {
+  const message = today()
+  const file = await getAppointmentsDataBuffer()
+  await sendFileToSlack({ file, message })
 }
-
-console.log(today())
