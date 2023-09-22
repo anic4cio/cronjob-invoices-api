@@ -1,0 +1,44 @@
+name: acuity-appt-backup
+on:
+  push:
+    branches: [main]
+jobs:
+  job_id:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Actions repository checkout
+        uses: actions/checkout@v3
+      - name: Setup node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Transpile files to TS
+        run: npm run build
+      - name: Delete /node_modules
+        run: rm -rf node_modules
+      - name: Authenticate to Cloud Functions
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CLOUD_KEY }}
+      - name: Deploy the cloud function
+        id: deploy
+        uses: google-github-actions/deploy-cloud-functions@v1
+        with:
+          name: acuity-appt-backup
+          runtime: nodejs18
+          entry_point: start
+          memory_mb: 256
+          region: us-west2
+          env_vars: CLOUD_FUNCTION_TOKEN=${{ secrets.CLOUD_FUNCTION_TOKEN }},SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
+          project_id: black-nucleus-236512
+          service_account_email: black-nucleus-236512@appspot.gserviceaccount.com
+          timeout: 120
+          max_instances: 10
+          https_trigger_security_level: secure_always
