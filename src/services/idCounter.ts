@@ -3,16 +3,17 @@ import fs from 'fs'
 import { initializeApp, cert } from 'firebase-admin/app'
 import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 
-const firestoreCollection = 'new-collection'
-const firestoreDocument = 'JcWv3ulk4nFCtqfvNrD5'
+const firestoreCollection = process.env.FIRESTORE_COLLECTION
+const firestoreDocument = process.env.FIERSTORE_DOCUMENT
+const firebaseToken = process.env.CREDENTIALS
 
-const json = fs.readFileSync('cloud-test-634eb-4ce9618b49bd.json', 'utf8')
+const json = fs.readFileSync(firebaseToken!, 'utf8')
 const serviceAccount = JSON.parse(json)
 
 initializeApp({
   credential: cert(serviceAccount),
-  databaseURL: 'https://console.cloud.google.com/firestore/databases?project=cloud-test-634eb',
-  projectId: 'cloud-test-634eb'
+  databaseURL: process.env.DATABASE_URL,
+  projectId: process.env.PROJECT_ID
 })
 
 const firestoreDb = getFirestore()
@@ -40,7 +41,7 @@ console.log(documents)
   return count
 }
 
-const docRef = firestoreDb.collection(firestoreCollection)
+const docRef = firestoreDb.collection(firestoreCollection!)
 
 ;(async () => {
   console.log(
