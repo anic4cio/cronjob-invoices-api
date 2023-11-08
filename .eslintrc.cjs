@@ -18,6 +18,7 @@ module.exports = {
   },
   ignorePatterns: [
     '/lib/**/*',
+    'pdfGenerator.d.ts'
   ],
   plugins: [
     '@typescript-eslint',
